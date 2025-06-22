@@ -1,0 +1,3 @@
+id,make,model,year,vin,price,date,notes,status,bill_of_sale_filename
+1,toyota,venza,2009,4T3BK11A29U020307,8614.67,2025-06-13,,Sold,
+2,nissan,sentra,2014,3N1AB7AP3EL632331,3606.17,2025-06-13,,In Stock,

@@ -1,0 +1,166 @@
+
+{% extends "base.html" %}
+
+{% block title %}Download Reports - Vehicle Tracker{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4"><i class="fas fa-download me-2"></i>Download Vehicle Reports</h1>
+        <p class="lead">Select sold vehicles to download comprehensive reports including purchase details, sale information, and all associated expenses.</p>
+    </div>
+</div>
+
+<!-- Sold Vehicles List -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-handshake me-2"></i>Sold Vehicles Available for Download</h5>
+            </div>
+            <div class="card-body">
+                {% if sold_vehicles %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Vehicle ID</th>
+                                    <th>Vehicle</th>
+                                    <th>Purchase Price</th>
+                                    <th>Sale Price</th>
+                                    <th>Sale Date</th>
+                                    <th>Buyer</th>
+                                    <th>Total Expenses</th>
+                                    <th>Net Profit</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for vehicle_data in sold_vehicles %}
+                                <tr>
+                                    <td><span class="badge bg-primary">{{ vehicle_data.vehicle.id }}</span></td>
+                                    <td>
+                                        <strong>{{ vehicle_data.vehicle.make }} {{ vehicle_data.vehicle.model }}</strong><br>
+                                        <small class="text-muted">{{ vehicle_data.vehicle.year }} • VIN: {{ vehicle_data.vehicle.vin }}</small>
+                                    </td>
+                                    <td class="text-end">${{ "{:,.2f}".format(vehicle_data.purchase_price) }}</td>
+                                    <td class="text-end text-success">${{ "{:,.2f}".format(vehicle_data.sale_price) }}</td>
+                                    <td>{{ vehicle_data.sale_date }}</td>
+                                    <td>{{ vehicle_data.buyer_info or 'Not specified' }}</td>
+                                    <td class="text-end text-danger">${{ "{:,.2f}".format(vehicle_data.total_expenses) }}</td>
+                                    <td class="text-end {% if vehicle_data.net_profit >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                        {% if vehicle_data.net_profit >= 0 %}+{% endif %} ${{ "{:,.2f}".format(vehicle_data.net_profit) }}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('download_vehicle_report', sale_id=vehicle_data.sale_id) }}" 
+                                               class="btn btn-success btn-sm"
+                                               data-bs-toggle="tooltip" title="Download Complete Report">
+                                                <i class="fas fa-download"></i> PDF Report
+                                            </a>
+                                            <a href="{{ url_for('download_vehicle_csv', sale_id=vehicle_data.sale_id) }}" 
+                                               class="btn btn-outline-primary btn-sm"
+                                               data-bs-toggle="tooltip" title="Download CSV Data">
+                                                <i class="fas fa-file-csv"></i> CSV
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Summary Statistics -->
+                    <div class="row mt-4">
+                        <div class="col-md-3">
+                            <div class="card bg-info text-white text-center">
+                                <div class="card-body">
+                                    <h6>Total Vehicles Sold</h6>
+                                    <h4>{{ sold_vehicles|length }}</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white text-center">
+                                <div class="card-body">
+                                    <h6>Total Revenue</h6>
+                                    <h4>${{ "{:,.2f}".format(sold_vehicles|sum(attribute='sale_price')) }}</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-dark text-center">
+                                <div class="card-body">
+                                    <h6>Total Expenses</h6>
+                                    <h4>${{ "{:,.2f}".format(sold_vehicles|sum(attribute='total_expenses')) }}</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-primary text-white text-center">
+                                <div class="card-body">
+                                    <h6>Total Net Profit</h6>
+                                    <h4>${{ "{:,.2f}".format(sold_vehicles|sum(attribute='net_profit')) }}</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Bulk Download Options -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="fas fa-archive me-2"></i>Bulk Download Options</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        <div class="col-md-4">
+                                            <a href="{{ url_for('download_all_sales_pdf') }}" class="btn btn-primary w-100">
+                                                <i class="fas fa-file-pdf me-2"></i>Download All Sales (PDF)
+                                            </a>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <a href="{{ url_for('download_all_sales_csv') }}" class="btn btn-outline-primary w-100">
+                                                <i class="fas fa-file-csv me-2"></i>Download All Sales (CSV)
+                                            </a>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <a href="{{ url_for('download_inventory_summary') }}" class="btn btn-outline-secondary w-100">
+                                                <i class="fas fa-warehouse me-2"></i>Inventory Summary (CSV)
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-handshake fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No Sold Vehicles Found</h5>
+                        <p class="text-muted">You haven't sold any vehicles yet. Once you record vehicle sales, they will appear here for download.</p>
+                        <a href="{{ url_for('sales') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Record a Sale
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Initialize tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}

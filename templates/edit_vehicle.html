@@ -1,0 +1,102 @@
+
+{% extends "base.html" %}
+
+{% block title %}Edit Vehicle - Vehicle Tracker{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4"><i class="fas fa-edit me-2"></i>Edit Vehicle</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-car me-2"></i>Edit Vehicle Details</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="make" class="form-label">Make *</label>
+                            <input type="text" class="form-control" id="make" name="make" value="{{ vehicle.make }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="model" class="form-label">Model *</label>
+                            <input type="text" class="form-control" id="model" name="model" value="{{ vehicle.model }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="year" class="form-label">Year *</label>
+                            <input type="number" class="form-control" id="year" name="year" value="{{ vehicle.year }}" min="1900" max="2030" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="vin" class="form-label">VIN *</label>
+                            <input type="text" class="form-control" id="vin" name="vin" value="{{ vehicle.vin }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="price" class="form-label">Purchase Price ($) *</label>
+                            <input type="number" class="form-control" id="price" name="price" value="{{ vehicle.price }}" step="0.01" min="0" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="date" class="form-label">Purchase Date</label>
+                            <input type="date" class="form-control" id="date" name="date" value="{{ vehicle.date }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="In Stock" {% if vehicle.status == 'In Stock' %}selected{% endif %}>In Stock</option>
+                                <option value="Sold" {% if vehicle.status == 'Sold' %}selected{% endif %}>Sold</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label for="notes" class="form-label">Notes</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Additional notes about the vehicle...">{{ vehicle.notes }}</textarea>
+                        </div>
+                        <div class="col-12">
+                            <label for="bill_of_sale" class="form-label">Bill of Sale</label>
+                            {% if vehicle.bill_of_sale_filename %}
+                                <div class="mb-2">
+                                    <span class="text-success">
+                                        <i class="fas fa-check-circle me-1"></i>
+                                        Bill of sale uploaded
+                                    </span>
+                                    <div class="btn-group btn-group-sm ms-2">
+                                        <a href="{{ url_for('download_bill_of_sale', vehicle_id=vehicle.id) }}" 
+                                           class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-download me-1"></i>Download
+                                        </a>
+                                        <a href="{{ url_for('delete_vehicle_bill_of_sale', vehicle_id=vehicle.id) }}" 
+                                           class="btn btn-outline-danger btn-sm"
+                                           onclick="return confirm('Are you sure you want to delete the bill of sale?')">
+                                            <i class="fas fa-trash me-1"></i>Delete
+                                        </a>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            <input type="file" class="form-control" id="bill_of_sale" name="bill_of_sale" 
+                                   accept=".pdf,.jpg,.jpeg,.png">
+                            <div class="form-text">
+                                {% if vehicle.bill_of_sale_filename %}
+                                    Upload a new file to replace the existing bill of sale
+                                {% else %}
+                                    Upload a PDF, JPG, or PNG file (max 16MB)
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Update Vehicle
+                            </button>
+                            <a href="{{ url_for('inventory') }}" class="btn btn-secondary ms-2">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

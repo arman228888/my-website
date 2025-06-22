@@ -1,0 +1,317 @@
+{% extends "base.html" %}
+
+{% block title %}Reports & Analytics - Vehicle Tracker{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4"><i class="fas fa-chart-bar me-2"></i>Reports & Analytics</h1>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row g-4 mb-5">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-car fa-2x mb-2"></i>
+                <h5>Total Vehicles</h5>
+                <h3>{{ reports.make_summary.values()|sum(attribute='total') or 0 }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-handshake fa-2x mb-2"></i>
+                <h5>Vehicles Sold</h5>
+                <h3>{{ reports.make_summary.values()|sum(attribute='sold') or 0 }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-warehouse fa-2x mb-2"></i>
+                <h5>In Stock</h5>
+                <h3>{{ reports.make_summary.values()|sum(attribute='in_stock') or 0 }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-dark">
+            <div class="card-body text-center">
+                <i class="fas fa-percentage fa-2x mb-2"></i>
+                <h5>Sales Rate</h5>
+                {% set total = reports.make_summary.values()|sum(attribute='total') or 1 %}
+                {% set sold = reports.make_summary.values()|sum(attribute='sold') or 0 %}
+                <h3>{{ "%.1f"|format((sold / total * 100) if total > 0 else 0) }}%</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Vehicle Inventory by Make -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Vehicle Inventory by Make</h5>
+            </div>
+            <div class="card-body">
+                {% if reports.make_summary %}
+                    <div class="row">
+                        {% for make, stats in reports.make_summary.items() %}
+                        <div class="col-md-4 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ make }}</h6>
+                                    <div class="row text-center">
+                                        <div class="col-4">
+                                            <div class="text-primary">
+                                                <strong>{{ stats.total }}</strong><br>
+                                                <small>Total</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="text-success">
+                                                <strong>{{ stats.sold }}</strong><br>
+                                                <small>Sold</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="text-info">
+                                                <strong>{{ stats.in_stock }}</strong><br>
+                                                <small>In Stock</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="progress mt-2">
+                                        {% set sold_percent = (stats.sold / stats.total * 100) if stats.total > 0 else 0 %}
+                                        <div class="progress-bar bg-success" style="width: {{ sold_percent }}%"></div>
+                                    </div>
+                                    <small class="text-muted">{{ "%.1f"|format(sold_percent) }}% sold</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-chart-pie fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No inventory data available</h5>
+                        <p class="text-muted">Add vehicles to your inventory to see make statistics.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Expense Summary -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-receipt me-2"></i>Expense Summary by Type</h5>
+            </div>
+            <div class="card-body">
+                {% if reports.expense_summary %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Expense Type</th>
+                                    <th>Count</th>
+                                    <th>Total Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for exp_type, data in reports.expense_summary.items() %}
+                                <tr>
+                                    <td>{{ exp_type }}</td>
+                                    <td>{{ data.count }}</td>
+                                    <td class="text-end">${{ "{:,.2f}".format(data.total_amount) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-dark">
+                                    <th>Total</th>
+                                    <th>{{ reports.expense_summary.values()|sum(attribute='count') }}</th>
+                                    <th class="text-end">${{ "{:,.2f}".format(reports.expense_summary.values()|sum(attribute='total_amount')) }}</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-receipt fa-2x text-muted mb-2"></i>
+                        <p class="text-muted mb-0">No expense data available</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sales by Month -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Sales by Month</h5>
+            </div>
+            <div class="card-body">
+                {% if reports.sales_by_month %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Month</th>
+                                    <th>Sales Count</th>
+                                    <th>Revenue</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for month, data in reports.sales_by_month.items() %}
+                                <tr>
+                                    <td>{{ month }}</td>
+                                    <td>{{ data.count }}</td>
+                                    <td class="text-end">${{ "{:,.2f}".format(data.revenue) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-dark">
+                                    <th>Total</th>
+                                    <th>{{ reports.sales_by_month.values()|sum(attribute='count') }}</th>
+                                    <th class="text-end">${{ "{:,.2f}".format(reports.sales_by_month.values()|sum(attribute='revenue')) }}</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-calendar-alt fa-2x text-muted mb-2"></i>
+                        <p class="text-muted mb-0">No sales data available</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Most Profitable Vehicles -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-trophy me-2"></i>Top Performing Vehicle Sales</h5>
+            </div>
+            <div class="card-body">
+                {% if reports.vehicle_profits %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Vehicle</th>
+                                    <th>Purchase Price</th>
+                                    <th>Sale Price</th>
+                                    <th>Expenses</th>
+                                    <th>Net Profit</th>
+                                    <th>Sale Date</th>
+                                    <th>ROI</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for vehicle in reports.vehicle_profits %}
+                                <tr>
+                                    <td><strong>{{ vehicle.vehicle }}</strong></td>
+                                    <td>${{ "{:,.2f}".format(vehicle.purchase_price) }}</td>
+                                    <td class="text-success">${{ "{:,.2f}".format(vehicle.sale_price) }}</td>
+                                    <td class="text-danger">${{ "{:,.2f}".format(vehicle.expenses) }}</td>
+                                    <td class="{% if vehicle.profit >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                        {% if vehicle.profit >= 0 %}+{% endif %} ${{ "{:,.2f}".format(vehicle.profit) }}
+                                    </td>
+                                    <td>{{ vehicle.sale_date }}</td>
+                                    <td>
+                                        {% set roi = (vehicle.profit / vehicle.purchase_price * 100) if vehicle.purchase_price > 0 else 0 %}
+                                        <span class="{% if roi >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                            {{ "{:.1f}".format(roi) }}%
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-trophy fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No profitable sales data available</h5>
+                        <p class="text-muted">Complete some vehicle sales to see profitability analysis.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export Options -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-download me-2"></i>Export Reports</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-3">Export your data for external analysis or record keeping.</p>
+                <div class="row g-2">
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-primary w-100" onclick="exportTableToCSV('inventory')">
+                            <i class="fas fa-file-csv me-2"></i>Export Inventory
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-secondary w-100" onclick="exportTableToCSV('expenses')">
+                            <i class="fas fa-file-csv me-2"></i>Export Expenses
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-success w-100" onclick="exportTableToCSV('sales')">
+                            <i class="fas fa-file-csv me-2"></i>Export Sales
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-info w-100" onclick="window.print()">
+                            <i class="fas fa-print me-2"></i>Print Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function exportTableToCSV(type) {
+    // This is a simplified export function
+    // In a real application, you'd want to make an API call to get properly formatted CSV data
+    alert(`Export ${type} functionality would be implemented here. This would download a CSV file with ${type} data.`);
+}
+
+// Print styles
+const printStyles = `
+    <style media="print">
+        .btn, .card-header .fa-download, nav, footer { display: none !important; }
+        .card { border: 1px solid #dee2e6 !important; box-shadow: none !important; }
+        .card-body { padding: 1rem !important; }
+        .table { font-size: 12px !important; }
+        @page { margin: 1in; }
+    </style>
+`;
+
+document.head.insertAdjacentHTML('beforeend', printStyles);
+</script>
+{% endblock %}

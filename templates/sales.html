@@ -1,0 +1,308 @@
+{% extends "base.html" %}
+
+{% block title %}Vehicle Sales - Vehicle Tracker{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4"><i class="fas fa-handshake me-2"></i>Vehicle Sales</h1>
+    </div>
+</div>
+
+<!-- Record Sale Form -->
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-plus me-2"></i>Record New Sale</h5>
+            </div>
+            <div class="card-body">
+                {% if vehicles %}
+                <form method="POST" action="{{ url_for('add_sale') }}">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="vehicle_id" class="form-label">Vehicle (In Stock Only) *</label>
+                            <select class="form-select" id="vehicle_id" name="vehicle_id" required>
+                                <option value="">Select a vehicle to sell...</option>
+                                {% for vehicle in vehicles %}
+                                <option value="{{ vehicle.id }}">
+                                    {{ vehicle.id }}: {{ vehicle.make }} {{ vehicle.model }} {{ vehicle.year }} - ${{ "{:,.2f}".format(vehicle.price|float) }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="sale_price" class="form-label">Sale Price ($) *</label>
+                            <input type="number" class="form-control" id="sale_price" name="sale_price" 
+                                   step="0.01" min="0" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="sale_date" class="form-label">Sale Date *</label>
+                            <input type="date" class="form-control" id="sale_date" name="sale_date" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="buyer_info" class="form-label">Buyer Information</label>
+                            <input type="text" class="form-control" id="buyer_info" name="buyer_info" 
+                                   placeholder="Buyer name, contact, etc.">
+                        </div>
+                        <div class="col-12">
+                            <label for="sale_notes" class="form-label">Sale Notes</label>
+                            <textarea class="form-control" id="sale_notes" name="sale_notes" rows="3"
+                                      placeholder="Additional notes about the sale..."></textarea>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-handshake me-2"></i>Record Sale
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    No vehicles available for sale. All vehicles in inventory have been sold or there are no vehicles in stock.
+                    <a href="{{ url_for('inventory') }}" class="alert-link">Add vehicles to inventory</a> first.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sales List -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-list me-2"></i>Sales History ({{ sales|length }} sales)</h5>
+                {% if sales %}
+                <div>
+                    <span class="text-muted">Total Revenue: 
+                        <strong class="text-success">${{ "{:,.2f}".format(sales|map(attribute='sale_price')|map('float')|sum) }}</strong>
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if sales %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Sale ID</th>
+                                    <th>Vehicle</th>
+                                    <th>Purchase Price</th>
+                                    <th>Sale Price</th>
+                                    <th>Profit/Loss</th>
+                                    <th>Sale Date</th>
+                                    <th>Buyer</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sale in sales %}
+                                {% set vehicle = all_vehicles|selectattr('id', 'equalto', sale.vehicle_id)|first %}
+                                {% if vehicle %}
+                                    {% set profit = sale.sale_price|float - vehicle.price|float %}
+                                {% endif %}
+                                <tr>
+                                    <td>{{ sale.id }}</td>
+                                    <td>
+                                        {% if vehicle %}
+                                            <strong>{{ vehicle.make }} {{ vehicle.model }}</strong><br>
+                                            <small class="text-muted">{{ vehicle.year }} • VIN: {{ vehicle.vin }}</small>
+                                        {% else %}
+                                            <span class="text-muted">Vehicle not found (ID: {{ sale.vehicle_id }})</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if vehicle %}
+                                            ${{ "{:,.2f}".format(vehicle.price|float) }}
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <strong class="text-success">${{ "{:,.2f}".format(sale.sale_price|float) }}</strong>
+                                    </td>
+                                    <td>
+                                        {% if vehicle %}
+                                            {% if profit >= 0 %}
+                                                <span class="text-success fw-bold">+${{ "{:,.2f}".format(profit) }}</span>
+                                            {% else %}
+                                                <span class="text-danger fw-bold">-${{ "{:,.2f}".format(profit|abs) }}</span>
+                                            {% endif %}
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ sale.sale_date }}</td>
+                                    <td>
+                                        {% if sale.buyer_info %}
+                                            {% if sale.buyer_info|length > 30 %}
+                                                <span data-bs-toggle="tooltip" title="{{ sale.buyer_info }}">
+                                                    {{ sale.buyer_info[:30] }}...
+                                                </span>
+                                            {% else %}
+                                                {{ sale.buyer_info }}
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-muted">No buyer info</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button type="button" class="btn btn-outline-info" 
+                                                    onclick="viewSaleDetails({{ sale.id }})" 
+                                                    data-bs-toggle="modal" data-bs-target="#saleModal"
+                                                    data-bs-toggle="tooltip" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <a href="{{ url_for('generate_bill_of_sale', sale_id=sale.id) }}" 
+                                               class="btn btn-success"
+                                               data-bs-toggle="tooltip" title="Download Bill of Sale with Expenses">
+                                                <i class="fas fa-download"></i>
+                                            </a>
+                                            <a href="{{ url_for('delete_sale', sale_id=sale.id) }}" 
+                                               class="btn btn-outline-danger"
+                                               data-bs-toggle="tooltip" title="Delete Sale"
+                                               onclick="return confirm('Are you sure you want to delete this sale? The vehicle will be restored to inventory.')">
+                                                <i class="fas fa-undo"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-handshake fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No sales recorded</h5>
+                        <p class="text-muted">Start recording your vehicle sales to track your business performance.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sales Statistics -->
+{% if sales %}
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h5 class="card-title"><i class="fas fa-dollar-sign me-2"></i>Total Revenue</h5>
+                <h3>${{ "{:,.2f}".format(sales|map(attribute='sale_price')|map('float')|sum) }}</h3>
+                <p class="mb-0">From {{ sales|length }} sale(s)</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <h5 class="card-title"><i class="fas fa-chart-line me-2"></i>Average Sale Price</h5>
+                <h3>${{ "{:,.2f}".format((sales|map(attribute='sale_price')|map('float')|sum) / (sales|length)) }}</h3>
+                <p class="mb-0">Per vehicle sold</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-warning text-dark">
+            <div class="card-body text-center">
+                <h5 class="card-title"><i class="fas fa-calendar me-2"></i>Recent Sales</h5>
+                <h3>{{ sales[-7:]|length }}</h3>
+                <p class="mb-0">In last 7 records</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Sale Details Modal -->
+<div class="modal fade" id="saleModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Sale Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="saleModalBody">
+                <div class="text-center py-3">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Set default date to today
+document.addEventListener('DOMContentLoaded', function() {
+    const dateInput = document.getElementById('sale_date');
+    if (dateInput && !dateInput.value) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today;
+    }
+    
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+
+function viewSaleDetails(saleId) {
+    const modalBody = document.getElementById('saleModalBody');
+    modalBody.innerHTML = `
+        <div class="text-center py-3">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    `;
+    
+    // For now, we'll show a placeholder since we'd need to implement a sale details API endpoint
+    // In a real implementation, you'd fetch sale details similar to vehicle details
+    const sales = {{ sales | tojson }};
+    const sale = sales.find(s => s.id == saleId);
+    
+    if (sale) {
+        modalBody.innerHTML = `
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <strong>Sale ID:</strong> ${sale.id}
+                </div>
+                <div class="col-md-6">
+                    <strong>Vehicle ID:</strong> ${sale.vehicle_id}
+                </div>
+                <div class="col-md-6">
+                    <strong>Sale Price:</strong> $${parseFloat(sale.sale_price).toLocaleString('en-US', {minimumFractionDigits: 2})}
+                </div>
+                <div class="col-md-6">
+                    <strong>Sale Date:</strong> ${sale.sale_date}
+                </div>
+                <div class="col-12">
+                    <strong>Buyer Information:</strong>
+                    <div class="mt-2">${sale.buyer_info || 'No buyer information provided'}</div>
+                </div>
+                ${sale.sale_notes ? `
+                <div class="col-12">
+                    <strong>Sale Notes:</strong>
+                    <div class="mt-2 p-3 bg-light rounded">${sale.sale_notes}</div>
+                </div>
+                ` : ''}
+            </div>
+        `;
+    } else {
+        modalBody.innerHTML = `<div class="alert alert-danger">Sale not found</div>`;
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,6 @@
+id,vehicle_id,type,amount,date,description
+1,1,gas,157.33,2025-06-21,
+2,1,OPI,109,2025-06-21,
+3,1,flight,110.73,2025-06-21,
+4,1,GST charge,385,2025-06-21,
+5,1,commision,561.63,2025-06-22,

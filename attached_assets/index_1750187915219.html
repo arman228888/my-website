@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Vehicle Tracker{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</h1>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row g-4 mb-5">
+    <div class="col-md-3">
+        <a href="{{ url_for('inventory') }}" class="text-decoration-none">
+            <div class="card bg-primary text-white dashboard-card clickable-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-0">Total Vehicles</h6>
+                            <h3 class="mb-0">{{ stats.total_vehicles }}</h3>
+                            <small class="opacity-75">Click to view inventory</small>
+                        </div>
+                        <i class="fas fa-car fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-md-3">
+        <a href="{{ url_for('inventory') }}?status=In Stock" class="text-decoration-none">
+            <div class="card bg-success text-white dashboard-card clickable-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-0">In Stock</h6>
+                            <h3 class="mb-0">{{ stats.in_stock_vehicles }}</h3>
+                            <small class="opacity-75">Click to view available</small>
+                        </div>
+                        <i class="fas fa-warehouse fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-md-3">
+        <a href="{{ url_for('inventory') }}?status=Sold" class="text-decoration-none">
+            <div class="card bg-info text-white dashboard-card clickable-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-0">Sold</h6>
+                            <h3 class="mb-0">{{ stats.sold_vehicles }}</h3>
+                            <small class="opacity-75">Click to view sold</small>
+                        </div>
+                        <i class="fas fa-handshake fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-md-3">
+        <a href="{{ url_for('inventory') }}?status=In Stock" class="text-decoration-none">
+            <div class="card bg-warning text-dark dashboard-card clickable-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-0">Inventory Value</h6>
+                            <h3 class="mb-0">${{ "{:,.2f}".format(stats.total_inventory_value) }}</h3>
+                            <small class="opacity-75">Click to manage inventory</small>
+                        </div>
+                        <i class="fas fa-dollar-sign fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- Financial Summary -->
+<div class="row g-4 mb-5">
+    <div class="col-md-4">
+        <a href="{{ url_for('sales') }}" class="text-decoration-none">
+            <div class="card clickable-card financial-card">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-success"><i class="fas fa-arrow-up me-2"></i>Total Revenue</h5>
+                    <h2 class="text-success">${{ "{:,.2f}".format(stats.total_sales_revenue) }}</h2>
+                    <p class="text-muted mb-0">From all vehicle sales</p>
+                    <small class="text-muted">Click to view sales</small>
+                </div>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-md-4">
+        <a href="{{ url_for('expenses') }}" class="text-decoration-none">
+            <div class="card clickable-card financial-card">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-danger"><i class="fas fa-arrow-down me-2"></i>Total Expenses</h5>
+                    <h2 class="text-danger">${{ "{:,.2f}".format(stats.total_expenses) }}</h2>
+                    <p class="text-muted mb-0">Vehicle maintenance & costs</p>
+                    <small class="text-muted">Click to manage expenses</small>
+                </div>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-md-4">
+        <a href="{{ url_for('reports') }}" class="text-decoration-none">
+            <div class="card clickable-card financial-card">
+                <div class="card-body text-center">
+                    <h5 class="card-title {% if stats.net_profit >= 0 %}text-success{% else %}text-danger{% endif %}">
+                        <i class="fas fa-chart-line me-2"></i>Net Profit
+                    </h5>
+                    <h2 class="{% if stats.net_profit >= 0 %}text-success{% else %}text-danger{% endif %}">
+                        ${{ "{:,.2f}".format(stats.net_profit) }}
+                    </h2>
+                    <p class="text-muted mb-0">Revenue - Costs - Expenses</p>
+                    <small class="text-muted">Click to view detailed reports</small>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <a href="{{ url_for('inventory') }}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-plus me-2"></i>Add Vehicle
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('expenses') }}" class="btn btn-outline-secondary w-100">
+                            <i class="fas fa-receipt me-2"></i>Add Expense
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('sales') }}" class="btn btn-outline-success w-100">
+                            <i class="fas fa-handshake me-2"></i>Record Sale
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('reports') }}" class="btn btn-outline-info w-100">
+                            <i class="fas fa-chart-bar me-2"></i>View Reports
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity placeholder -->
+{% if stats.total_vehicles == 0 %}
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-car fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">Welcome to Vehicle Tracker</h4>
+                <p class="text-muted mb-4">Get started by adding your first vehicle to the inventory.</p>
+                <a href="{{ url_for('inventory') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Add Your First Vehicle
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
